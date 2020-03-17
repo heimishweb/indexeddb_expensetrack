@@ -5,7 +5,7 @@ $("#add-btn").on("click", function () {
 });
 
 
-function insertDB() {
+function insertDB(inTransaction) {
 
     const request = window.indexedDB.open("expense", 1);
 

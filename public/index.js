@@ -1,3 +1,4 @@
+
 let transactions = [];
 let myChart;
 
@@ -66,14 +67,14 @@ function populateChart() {
 
   myChart = new Chart(ctx, {
     type: 'line',
-      data: {
-        labels,
-        datasets: [{
-            label: "Total Over Time",
-            fill: true,
-            backgroundColor: "#6666ff",
-            data
-        }]
+    data: {
+      labels,
+      datasets: [{
+        label: "Total Over Time",
+        fill: true,
+        backgroundColor: "#6666ff",
+        data
+      }]
     }
   });
 }
@@ -111,7 +112,7 @@ function sendTransaction(isAdding) {
   populateChart();
   populateTable();
   populateTotal();
-  
+
   // also send to server
   fetch("/api/transaction", {
     method: "POST",
@@ -121,33 +122,88 @@ function sendTransaction(isAdding) {
       "Content-Type": "application/json"
     }
   })
-  .then(response => {    
-    return response.json();
-  })
-  .then(data => {
-    if (data.errors) {
-      errorEl.textContent = "Missing Information";
-    }
-    else {
+    .then(response => {
+      return response.json();
+    })
+    .then(data => {
+      if (data.errors) {
+        errorEl.textContent = "Missing Information";
+      }
+      else {
+        // clear form
+        nameEl.value = "";
+        amountEl.value = "";
+      }
+    })
+    .catch(err => {
+      // fetch failed, so save in indexed db
+      console.log("!!!!!! " + JSON.stringify(transaction))
+      var transactionObject = JSON.stringify(transaction);
+      saveRecord(transactionObject);
+     
+      function saveRecord(transactionObject) {
+        const request = window.indexedDB.open("expense", 1);
+
+        // Create schema
+        request.onupgradeneeded = event => {
+          const db = event.target.result;
+
+          // Creates an object store with a listID keypath that can be used to query on.
+          const expenseStore = db.createObjectStore("expense", { keyPath: "name" });
+          // Creates a statusIndex that we can query on.
+          expenseStore.createIndex("statusIndex", "value");
+        }
+
+        // Opens a transaction, accesses the expense objectStore and statusIndex.
+        request.onsuccess = () => {
+          var nameOfThing = transactionObject.name
+          console.log(nameOfThing + " is the name of thing")
+          var valueOfThing = transactionObject.value
+          console.log("not crazy")
+
+
+          const db = request.result;
+          const transaction = db.transaction(["expense"], "readwrite");
+          const expenseStore = transaction.objectStore("expense");
+          const statusIndex = expenseStore.index("statusIndex");
+
+          // Adds data to our objectStore
+          expenseStore.add({ name: nameOfThing , value: valueOfThing  });
+
+          //get allData so far; added by me 03/15/2020
+          var allData = expenseStore.getAll();
+          console.log(allData); //RETURNS OBJECT
+          // expenseStore.add({ listID: allData, status: allData }) //doesn't like it
+          //send allData to local storage or indexedDB or somewhere else in internet.
+
+          //   $("#getAll").on("click", function () {
+          //     console.log(allData.result);
+
+          //   })
+
+          // Return an item by keyPath
+          const getRequest = expenseStore.get("1");
+          getRequest.onsuccess = () => {
+            console.log(getRequest.result);
+          };
+
+          // Return an item by index
+          const getRequestIdx = statusIndex.getAll("complete");
+          getRequestIdx.onsuccess = () => {
+            console.log(getRequestIdx.result);
+          };
+        };
+      }
       // clear form
       nameEl.value = "";
       amountEl.value = "";
-    }
-  })
-  .catch(err => {
-    // fetch failed, so save in indexed db
-    saveRecord(transaction);
-
-    // clear form
-    nameEl.value = "";
-    amountEl.value = "";
-  });
+    });
 }
 
-document.querySelector("#add-btn").onclick = function() {
+document.querySelector("#add-btn").onclick = function () {
   sendTransaction(true);
 };
 
-document.querySelector("#sub-btn").onclick = function() {
+document.querySelector("#sub-btn").onclick = function () {
   sendTransaction(false);
 };
