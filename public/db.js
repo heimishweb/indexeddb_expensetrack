@@ -1,5 +1,6 @@
 
 
+
 $("#add-btn").on("click", function () {
     insertDB();
 });
@@ -19,6 +20,8 @@ function insertDB(inTransaction) {
         expenseStore.createIndex("statusIndex", "status");
     }
 
+
+
     // Opens a transaction, accesses the expense objectStore and statusIndex.
     request.onsuccess = () => {
         var nameOfThing = $("#t-name").val();
@@ -35,9 +38,13 @@ function insertDB(inTransaction) {
         // Adds data to our objectStore
         expenseStore.add({ listID: nameOfThing, status: valueOfThing });
 
+
+        //check if online add from indexedDB to mongoose***
+
+        //
         //get allData so far; added by me 03/15/2020
-        var allData = expenseStore.getAll();
-        console.log(allData); //RETURNS OBJECT
+        // var allData = expenseStore.getAll();
+        // console.log(allData); //RETURNS OBJECT
         // expenseStore.add({ listID: allData, status: allData }) //doesn't like it
         //send allData to local storage or indexedDB or somewhere else in internet.
 
@@ -46,17 +53,33 @@ function insertDB(inTransaction) {
 
         //   })
 
-        // Return an item by keyPath
-        const getRequest = expenseStore.get("1");
-        getRequest.onsuccess = () => {
-            console.log(getRequest.result);
-        };
+        // // Return an item by keyPath
+        // const getRequest = expenseStore.get("1");
+        // getRequest.onsuccess = () => {
+        //     console.log(getRequest.result);
+        // };
 
-        // Return an item by index
-        const getRequestIdx = statusIndex.getAll("complete");
-        getRequestIdx.onsuccess = () => {
-            console.log(getRequestIdx.result);
-        };
+        // // Return an item by index
+        // const getRequestIdx = statusIndex.getAll("complete");
+        // getRequestIdx.onsuccess = () => {
+        //     console.log(getRequestIdx.result);
+        // };
+
+        if (navigator.onLine) {
+            console.log("mama goose online!")
+            const preallData = expenseStore.getAll(); //gets all indexedDB data
+            preallData.onsuccess = () => {
+                console.log("preallData is " + preallData)
+            }
+            // console.log("preallData.result is " + allData)
+            for (i = 0; preallData.length < i; i++) {
+                Transaction.create(preallData[i])
+
+            }
+
+        }
+
     };
+
 
 }

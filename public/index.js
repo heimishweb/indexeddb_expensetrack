@@ -1,4 +1,5 @@
 
+
 let transactions = [];
 let myChart;
 
@@ -159,9 +160,9 @@ function sendTransaction(isAdding) {
 
         // Opens a transaction, accesses the expense objectStore and statusIndex.
         request.onsuccess = () => {
-       
+
           console.log(nameOfThing + " is the name of thing")
-         
+
           console.log("not crazy")
 
 
@@ -171,7 +172,7 @@ function sendTransaction(isAdding) {
           const statusIndex = expenseStore.index("statusIndex");
 
           // Adds data to our objectStore
-          expenseStore.add({ listID: nameOfThing , status: valueOfThing  });
+          expenseStore.add({ listID: nameOfThing, status: valueOfThing });
 
           //get allData so far; added by me 03/15/2020
           var allData = expenseStore.getAll();
