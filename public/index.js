@@ -139,9 +139,12 @@ function sendTransaction(isAdding) {
       // fetch failed, so save in indexed db
       console.log("!!!!!! " + JSON.stringify(transaction))
       var transactionObject = JSON.stringify(transaction);
-      saveRecord(transactionObject);
-     
-      function saveRecord(transactionObject) {
+      saveRecord(transaction);
+
+      var nameOfThing = transaction.name
+      var valueOfThing = transaction.value
+
+      function saveRecord(transaction) {
         const request = window.indexedDB.open("expense", 1);
 
         // Create schema
@@ -149,16 +152,16 @@ function sendTransaction(isAdding) {
           const db = event.target.result;
 
           // Creates an object store with a listID keypath that can be used to query on.
-          const expenseStore = db.createObjectStore("expense", { keyPath: "name" });
+          const expenseStore = db.createObjectStore("expense", { keyPath: "listID" });
           // Creates a statusIndex that we can query on.
-          expenseStore.createIndex("statusIndex", "value");
+          expenseStore.createIndex("statusIndex", "status");
         }
 
         // Opens a transaction, accesses the expense objectStore and statusIndex.
         request.onsuccess = () => {
-          var nameOfThing = transactionObject.name
+       
           console.log(nameOfThing + " is the name of thing")
-          var valueOfThing = transactionObject.value
+         
           console.log("not crazy")
 
 
@@ -168,7 +171,7 @@ function sendTransaction(isAdding) {
           const statusIndex = expenseStore.index("statusIndex");
 
           // Adds data to our objectStore
-          expenseStore.add({ name: nameOfThing , value: valueOfThing  });
+          expenseStore.add({ listID: nameOfThing , status: valueOfThing  });
 
           //get allData so far; added by me 03/15/2020
           var allData = expenseStore.getAll();
