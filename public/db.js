@@ -15,9 +15,9 @@ function insertDB(inTransaction) {
         const db = event.target.result;
 
         // Creates an object store with a listID keypath that can be used to query on.
-        const expenseStore = db.createObjectStore("expense", { keyPath: "listID" });
+        const expenseStore = db.createObjectStore("expense", { keyPath: "name" });
         // Creates a statusIndex that we can query on.
-        expenseStore.createIndex("statusIndex", "status");
+        expenseStore.createIndex("statusIndex", "value");
     }
 
 
@@ -36,7 +36,7 @@ function insertDB(inTransaction) {
         const statusIndex = expenseStore.index("statusIndex");
 
         // Adds data to our objectStore
-        expenseStore.add({ listID: nameOfThing, status: valueOfThing });
+        expenseStore.add({ name: nameOfThing, value: valueOfThing });
 
 
         //check if online add from indexedDB to mongoose***
@@ -71,6 +71,7 @@ function insertDB(inTransaction) {
             preallData.onsuccess = () => {
                 console.log("preallData is " + preallData)
                 var allData = preallData.result;
+                console.log("all data is" + JSON.stringify(allData));
 
                 fetch("/api/transaction/bulk", {
                     method: "POST",
