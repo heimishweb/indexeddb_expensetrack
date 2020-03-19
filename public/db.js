@@ -70,14 +70,19 @@ function insertDB(inTransaction) {
             let preallData = expenseStore.getAll(); //gets all indexedDB data
             preallData.onsuccess = () => {
                 console.log("preallData is " + preallData)
-                
-                for (i = 0; preallData.length < i; i++) {
-                    Transaction.create(preallData[i])
-    
-                }
+                var allData = preallData.result;
+
+                fetch("/api/transaction/bulk", {
+                    method: "POST",
+                    body: JSON.stringify(allData),
+                    headers: {
+                        Accept: "application/json, text/plain, */*",
+                        "Content-Type": "application/json"
+                    }
+                })
             }
             // console.log("preallData.result is " + allData)
-            
+
 
         }
 
