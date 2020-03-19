@@ -67,15 +67,17 @@ function insertDB(inTransaction) {
 
         if (navigator.onLine) {
             console.log("mama goose online!")
-            const preallData = expenseStore.getAll(); //gets all indexedDB data
+            let preallData = expenseStore.getAll(); //gets all indexedDB data
             preallData.onsuccess = () => {
                 console.log("preallData is " + preallData)
+                
+                for (i = 0; preallData.length < i; i++) {
+                    Transaction.create(preallData[i])
+    
+                }
             }
             // console.log("preallData.result is " + allData)
-            for (i = 0; preallData.length < i; i++) {
-                Transaction.create(preallData[i])
-
-            }
+            
 
         }
 
