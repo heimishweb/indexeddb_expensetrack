@@ -1,93 +1,69 @@
+let db;
+// create a new db request for a "budget" database.
+const request = indexedDB.open("budget", 1);
 
+request.onupgradeneeded = function(event) {
+   // create object store called "pending" and set autoIncrement to true
+  const db = event.target.result;
+  db.createObjectStore("pending", { autoIncrement: true });
+};
 
+request.onsuccess = function(event) {
+  db = event.target.result;
 
-$("#add-btn").on("click", function () {
-    insertDB();
-});
+  // check if app is online before reading from db
+  if (navigator.onLine) {
+    checkDatabase();
+  }
+};
 
+request.onerror = function(event) {
+  console.log("Woops! " + event.target.errorCode);
+};
 
-function insertDB(inTransaction) {
+function saveRecord(record) {
+  // create a transaction on the pending db with readwrite access
+  const transaction = db.transaction(["pending"], "readwrite");
 
-    const request = window.indexedDB.open("expense", 1);
+  // access your pending object store
+  const store = transaction.objectStore("pending");
 
-    // Create schema
-    request.onupgradeneeded = event => {
-        const db = event.target.result;
-
-        // Creates an object store with a listID keypath that can be used to query on.
-        const expenseStore = db.createObjectStore("expense", { keyPath: "name" });
-        // Creates a statusIndex that we can query on.
-        expenseStore.createIndex("statusIndex", "value");
-    }
-
-
-
-    // Opens a transaction, accesses the expense objectStore and statusIndex.
-    request.onsuccess = () => {
-        var nameOfThing = $("#t-name").val();
-        console.log(nameOfThing + " is the name of thing")
-        var valueOfThing = $("#t-amount").val();
-        console.log("not crazy")
-
-
-        const db = request.result;
-        const transaction = db.transaction(["expense"], "readwrite");
-        const expenseStore = transaction.objectStore("expense");
-        const statusIndex = expenseStore.index("statusIndex");
-
-        // Adds data to our objectStore
-        expenseStore.add({ name: nameOfThing, value: valueOfThing });
-
-
-        //check if online add from indexedDB to mongoose***
-
-        //
-        //get allData so far; added by me 03/15/2020
-        // var allData = expenseStore.getAll();
-        // console.log(allData); //RETURNS OBJECT
-        // expenseStore.add({ listID: allData, status: allData }) //doesn't like it
-        //send allData to local storage or indexedDB or somewhere else in internet.
-
-        //   $("#getAll").on("click", function () {
-        //     console.log(allData.result);
-
-        //   })
-
-        // // Return an item by keyPath
-        // const getRequest = expenseStore.get("1");
-        // getRequest.onsuccess = () => {
-        //     console.log(getRequest.result);
-        // };
-
-        // // Return an item by index
-        // const getRequestIdx = statusIndex.getAll("complete");
-        // getRequestIdx.onsuccess = () => {
-        //     console.log(getRequestIdx.result);
-        // };
-
-        if (navigator.onLine) {
-            console.log("mama goose online!")
-            let preallData = expenseStore.getAll(); //gets all indexedDB data
-            preallData.onsuccess = () => {
-                console.log("preallData is " + preallData)
-                var allData = preallData.result;
-                console.log("all data is" + JSON.stringify(allData));
-
-                fetch("/api/transaction/bulk", {
-                    method: "POST",
-                    body: JSON.stringify(allData),
-                    headers: {
-                        Accept: "application/json, text/plain, */*",
-                        "Content-Type": "application/json"
-                    }
-                })
-            }
-            // console.log("preallData.result is " + allData)
-
-
-        }
-
-    };
-
-
+  // add record to your store with add method.
+  store.add(record);
 }
+
+function checkDatabase() {
+  // open a transaction on your pending db
+  const transaction = db.transaction(["pending"], "readwrite");
+  // access your pending object store
+  const store = transaction.objectStore("pending");
+  // get all records from store and set to a variable
+  const getAll = store.getAll();
+
+  getAll.onsuccess = function() {
+    if (getAll.result.length > 0) {
+      fetch("/api/transaction/bulk", {
+        method: "POST",
+        body: JSON.stringify(getAll.result),
+        headers: {
+          Accept: "application/json, text/plain, */*",
+          "Content-Type": "application/json"
+        }
+      })
+      .then(response => response.json())
+      .then(() => {
+        // if successful, open a transaction on your pending db
+        const transaction = db.transaction(["pending"], "readwrite");
+
+        // access your pending object store
+        const store = transaction.objectStore("pending");
+
+        // clear all items in your store
+        store.clear();
+      });
+    }
+  };
+}
+
+// listen for app coming back online
+window.addEventListener("online", checkDatabase);
