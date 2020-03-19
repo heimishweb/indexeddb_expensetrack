@@ -153,9 +153,9 @@ function sendTransaction(isAdding) {
           const db = event.target.result;
 
           // Creates an object store with a listID keypath that can be used to query on.
-          const expenseStore = db.createObjectStore("expense", { keyPath: "listID" });
+          const expenseStore = db.createObjectStore("expense", { keyPath: "name" });
           // Creates a statusIndex that we can query on.
-          expenseStore.createIndex("statusIndex", "status");
+          expenseStore.createIndex("statusIndex", "value");
         }
 
         // Opens a transaction, accesses the expense objectStore and statusIndex.
@@ -172,7 +172,7 @@ function sendTransaction(isAdding) {
           const statusIndex = expenseStore.index("statusIndex");
 
           // Adds data to our objectStore
-          expenseStore.add({ listID: nameOfThing, status: valueOfThing });
+          expenseStore.add({ name: nameOfThing, value: valueOfThing });
 
           //get allData so far; added by me 03/15/2020
           var allData = expenseStore.getAll();
